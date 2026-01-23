@@ -25,15 +25,25 @@ const startServer = async () => {
     // ================= MIDDLEWARES =================
   const allowedOrigins = [
   "http://localhost:5173",
-  "https://portfolio-i6598aglo-vinod-kumars-projects-9e99b201.vercel.app"
-    ];
+  "https://portfolio-i6598aglo-vinod-kumars-projects-9e99b201.vercel.app",
+];
 
-    app.use(
-        cors({
-              origin: allowedOrigins,
-              credentials: true,
-    })
-    );
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 
 
     app.use(express.json({ limit: "10mb" }));
