@@ -1,4 +1,3 @@
-// src/api/projects.api.js
 import api from "./api";
 
 /* ===============================

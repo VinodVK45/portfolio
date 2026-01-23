@@ -14,9 +14,16 @@ export const FooterProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await api.get("/footer");
-      setFooter(res.data);
+
+      const data = res.data || {};
+
+      setFooter({
+        ...data,
+        socials: Array.isArray(data.socials) ? data.socials : [],
+      });
     } catch (err) {
       console.error("Failed to fetch footer", err);
+      setFooter(null);
     } finally {
       setLoading(false);
     }
@@ -26,7 +33,13 @@ export const FooterProvider = ({ children }) => {
   const updateFooter = async (data) => {
     try {
       const res = await api.put("/footer", data);
-      setFooter(res.data.footer);
+      const updated = res.data.footer || {};
+
+      setFooter({
+        ...updated,
+        socials: Array.isArray(updated.socials) ? updated.socials : [],
+      });
+
       return true;
     } catch (err) {
       console.error("Failed to update footer", err);

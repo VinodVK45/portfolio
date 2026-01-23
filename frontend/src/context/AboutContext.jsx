@@ -14,9 +14,16 @@ export const AboutProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await api.get("/about");
-      setAbout(res.data);
+
+      const data = res.data || {};
+
+      setAbout({
+        ...data,
+        services: Array.isArray(data.services) ? data.services : [],
+      });
     } catch (err) {
       console.error("Failed to fetch About data", err);
+      setAbout(null);
     } finally {
       setLoading(false);
     }
@@ -25,10 +32,14 @@ export const AboutProvider = ({ children }) => {
   /* ===== Update About (Admin) ===== */
   const updateAbout = async (formData) => {
     try {
-      const res = await api.put("/about", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const res = await api.put("/about", formData);
+      const data = res.data.about || {};
+
+      setAbout({
+        ...data,
+        services: Array.isArray(data.services) ? data.services : [],
       });
-      setAbout(res.data.about);
+
       return true;
     } catch (err) {
       console.error("Failed to update About", err);
