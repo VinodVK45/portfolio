@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 
 /* ================= CONTEXT ================= */
 const AboutContext = createContext();
@@ -9,14 +9,11 @@ export const AboutProvider = ({ children }) => {
   const [about, setAbout] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API = "http://localhost:5000/api/about";
-
-
   /* ===== Fetch About Data ===== */
   const fetchAbout = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API);
+      const res = await api.get("/about");
       setAbout(res.data);
     } catch (err) {
       console.error("Failed to fetch About data", err);
@@ -28,7 +25,7 @@ export const AboutProvider = ({ children }) => {
   /* ===== Update About (Admin) ===== */
   const updateAbout = async (formData) => {
     try {
-      const res = await axios.put(API, formData, {
+      const res = await api.put("/about", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setAbout(res.data.about);
@@ -44,14 +41,7 @@ export const AboutProvider = ({ children }) => {
   }, []);
 
   return (
-    <AboutContext.Provider
-      value={{
-        about,
-        loading,
-        fetchAbout,
-        updateAbout,
-      }}
-    >
+    <AboutContext.Provider value={{ about, loading, fetchAbout, updateAbout }}>
       {children}
     </AboutContext.Provider>
   );

@@ -1,22 +1,37 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api/api";
 
+/* ================= CONTEXT ================= */
 const FooterContext = createContext();
 
+/* ================= PROVIDER ================= */
 export const FooterProvider = ({ children }) => {
   const [footer, setFooter] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const API = "http://localhost:5000/api/footer";
-
+  /* ===== Fetch Footer ===== */
   const fetchFooter = async () => {
-    const res = await axios.get(API);
-    setFooter(res.data);
+    try {
+      setLoading(true);
+      const res = await api.get("/footer");
+      setFooter(res.data);
+    } catch (err) {
+      console.error("Failed to fetch footer", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  /* ===== Update Footer (Admin) ===== */
   const updateFooter = async (data) => {
-    const res = await axios.put(API, data);
-    setFooter(res.data.footer);
-    return true;
+    try {
+      const res = await api.put("/footer", data);
+      setFooter(res.data.footer);
+      return true;
+    } catch (err) {
+      console.error("Failed to update footer", err);
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -24,10 +39,19 @@ export const FooterProvider = ({ children }) => {
   }, []);
 
   return (
-    <FooterContext.Provider value={{ footer, updateFooter }}>
+    <FooterContext.Provider
+      value={{ footer, loading, fetchFooter, updateFooter }}
+    >
       {children}
     </FooterContext.Provider>
   );
 };
 
-export const useFooter = () => useContext(FooterContext);
+/* ================= HOOK ================= */
+export const useFooter = () => {
+  const context = useContext(FooterContext);
+  if (!context) {
+    throw new Error("useFooter must be used inside FooterProvider");
+  }
+  return context;
+};

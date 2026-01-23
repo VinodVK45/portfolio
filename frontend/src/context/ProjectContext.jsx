@@ -1,84 +1,80 @@
-    import { createContext, useContext, useEffect, useState } from "react";
-    import {
-    fetchProjects,
-    createProjectAPI,
-    updateProjectAPI,
-    deleteProjectAPI,
-    } from "../services/project.api";
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/projects`;
 
-    const ProjectContext = createContext(null);
+/* ===============================
+   GET ALL PROJECTS (PUBLIC)
+================================ */
+export const fetchProjects = async () => {
+  const res = await fetch(API_URL);
 
-    /* ================= PROVIDER ================= */
-    export function ProjectProvider({ children }) {
-    const [projects, setProjects] = useState({
-        web: [],
-        uiux: [],
-        editing: [],
-    });
+  if (!res.ok) {
+    throw new Error("Failed to fetch projects");
+  }
 
-    const [loading, setLoading] = useState(true);
+  return res.json();
+};
 
-    /* ---------- FETCH FROM BACKEND ---------- */
-    useEffect(() => {
-        loadProjects();
-    }, []);
+/* ===============================
+   CREATE PROJECT (ADMIN)
+================================ */
+export const createProjectAPI = async (formData) => {
+  const token = localStorage.getItem("adminToken");
 
-    const loadProjects = async () => {
-        setLoading(true);
-        const data = await fetchProjects();
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData, // ✅ FormData → no Content-Type
+  });
 
-        // Group by category
-        const grouped = {
-        web: [],
-        uiux: [],
-        editing: [],
-        };
+  if (!res.ok) {
+    throw new Error("Failed to create project");
+  }
 
-        data.forEach((p) => {
-        grouped[p.category]?.push(p);
-        });
+  return res.json();
+};
 
-        setProjects(grouped);
-        setLoading(false);
-    };
+/* ===============================
+   UPDATE PROJECT (ADMIN)
+================================ */
+export const updateProjectAPI = async (id, formData) => {
+  const token = localStorage.getItem("adminToken");
 
-    /* ---------- CRUD ---------- */
-    const addProject = async (project) => {
-        await createProjectAPI(project);
-        await loadProjects(); // 🔥 re-sync
-    };
+  const res = await fetch(`${API_URL}/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
 
-    const updateProject = async (id, data) => {
-        await updateProjectAPI(id, data);
-        await loadProjects();
-    };
+  if (!res.ok) {
+    throw new Error("Failed to update project");
+  }
 
-    const deleteProject = async (id) => {
-        await deleteProjectAPI(id);
-        await loadProjects();
-    };
+  return res.json();
+};
 
-    return (
-        <ProjectContext.Provider
-        value={{
-            projects,
-            loading,
-            addProject,
-            updateProject,
-            deleteProject,
-        }}
-        >
-        {children}
-        </ProjectContext.Provider>
-    );
-    }
+/* ===============================
+   DELETE PROJECT (ADMIN)
+================================ */
+export const deleteProjectAPI = async (id) => {
+  const token = localStorage.getItem("adminToken");
 
-    /* ================= HOOK ================= */
-    export function useProjects() {
-    const ctx = useContext(ProjectContext);
-    if (!ctx) throw new Error("useProjects must be inside ProjectProvider");
-    return ctx;
-    }
+  const res = await fetch(`${API_URL}/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete project");
+  }
+
+  return res.json();
+};
+
 
 
 
