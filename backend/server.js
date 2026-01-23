@@ -25,24 +25,24 @@ const startServer = async () => {
     // ================= MIDDLEWARES =================
   const allowedOrigins = [
   "http://localhost:5173",
-  "https://portfolio-i6598aglo-vinod-kumars-projects-9e99b201.vercel.app",
+  "https://portfolio-wheat-rho-45.vercel.app",
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (Postman, curl)
+    origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS not allowed"));
+        return callback(null, true);
       }
+
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
+
 
 
 
