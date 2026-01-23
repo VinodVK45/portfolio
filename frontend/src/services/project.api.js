@@ -1,37 +1,76 @@
-const API_URL = "http://localhost:5000/api/projects";
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/projects`;
 
-// GET ALL
+/* ===============================
+   GET ALL PROJECTS (PUBLIC)
+================================ */
 export const fetchProjects = async () => {
   const res = await fetch(API_URL);
-  if (!res.ok) throw new Error("Failed to fetch projects");
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch projects");
+  }
+
   return res.json();
 };
 
-// CREATE
+/* ===============================
+   CREATE PROJECT (ADMIN)
+================================ */
 export const createProjectAPI = async (formData) => {
+  const token = localStorage.getItem("adminToken");
+
   const res = await fetch(API_URL, {
     method: "POST",
-    body: formData, // ✅ NO HEADERS
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData, // ✅ FormData → no Content-Type
   });
-  if (!res.ok) throw new Error("Failed to create project");
+
+  if (!res.ok) {
+    throw new Error("Failed to create project");
+  }
+
   return res.json();
 };
 
-// UPDATE
+/* ===============================
+   UPDATE PROJECT (ADMIN)
+================================ */
 export const updateProjectAPI = async (id, formData) => {
+  const token = localStorage.getItem("adminToken");
+
   const res = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
-    body: formData, // ✅ NO HEADERS
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
   });
-  if (!res.ok) throw new Error("Failed to update project");
+
+  if (!res.ok) {
+    throw new Error("Failed to update project");
+  }
+
   return res.json();
 };
 
-// DELETE
+/* ===============================
+   DELETE PROJECT (ADMIN)
+================================ */
 export const deleteProjectAPI = async (id) => {
+  const token = localStorage.getItem("adminToken");
+
   const res = await fetch(`${API_URL}/${id}`, {
     method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
-  if (!res.ok) throw new Error("Failed to delete project");
+
+  if (!res.ok) {
+    throw new Error("Failed to delete project");
+  }
+
   return res.json();
 };
