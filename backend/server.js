@@ -9,46 +9,35 @@ import aboutRoutes from "./routes/about.routes.js";
 import projectRoutes from "./routes/Projects/project.routes.js";
 import footerRoutes from "./routes/footer.routes.js";
 
-// 🔐 ADMIN SEED
-import createAdminIfNotExists from "./utils/createAdmin.js";
-
 dotenv.config();
 
 const app = express();
 
-// ================= CONNECT DB + CREATE ADMIN =================
+// ================= START SERVER =================
 const startServer = async () => {
   try {
     await connectDB(); // ✅ Mongo connected
-   // await createAdminIfNotExists(); // ✅ Admin created if missing
 
-    // ================= MIDDLEWARES =================
-  const allowedOrigins = [
-  "http://localhost:5173",
-  "https://portfolio-wheat-rho-45.vercel.app",
-];
+    // ================= CORS (FINAL FIX) =================
+    app.use(
+      cors({
+        origin: true, // 🔥 allow all origins (Vercel, localhost, preview)
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: [
+          "Content-Type",
+          "Authorization",
+          "X-Requested-With",
+        ],
+      })
+    );
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+    // 🔥 HANDLE PREFLIGHT (VERY IMPORTANT)
+    app.options("*", cors());
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
-
-
-
-
+    // ================= BODY PARSERS =================
     app.use(express.json({ limit: "10mb" }));
     app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
 
     // ================= ROUTES =================
     app.use("/api/auth", authRoutes);
@@ -63,9 +52,9 @@ app.use(
 
     const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
 
   } catch (error) {
     console.error("❌ Server failed to start:", error.message);

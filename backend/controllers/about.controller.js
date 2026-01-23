@@ -3,8 +3,27 @@ import cloudinary from "../config/cloudinary.js";
 
 /* ================= GET ABOUT ================= */
 export const getAbout = async (req, res) => {
-  const about = await About.findOne();
-  res.json(about);
+  try {
+    let about = await About.findOne();
+
+    if (!about) {
+      about = await About.create({
+        subtitle: "About Me",
+        paragraph1: "",
+        paragraph2: "",
+        paragraph3: "",
+        highlightText: "",
+        services: [],
+        location: "",
+        image: null,
+      });
+    }
+
+    res.json(about);
+  } catch (err) {
+    console.error("GET ABOUT ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
 };
 
 /* ================= UPDATE ABOUT ================= */
@@ -23,7 +42,6 @@ export const updateAbout = async (req, res) => {
     let about = await About.findOne();
     if (!about) about = new About();
 
-    /* ---------- SAFE SERVICES PARSING ---------- */
     let parsedServices = [];
 
     if (Array.isArray(services)) {
@@ -32,14 +50,10 @@ export const updateAbout = async (req, res) => {
       try {
         parsedServices = JSON.parse(services);
       } catch {
-        parsedServices = services
-          .split(",")
-          .map(s => s.trim())
-          .filter(Boolean);
+        parsedServices = services.split(",").map(s => s.trim()).filter(Boolean);
       }
     }
 
-    /* ---------- SAVE DATA FUNCTION ---------- */
     const saveData = async () => {
       about.subtitle = subtitle;
       about.paragraph1 = paragraph1;
@@ -53,7 +67,6 @@ export const updateAbout = async (req, res) => {
       res.json({ success: true, about });
     };
 
-    /* ---------- IMAGE UPLOAD ---------- */
     if (req.file) {
       if (about.image?.public_id) {
         await cloudinary.uploader.destroy(about.image.public_id);
@@ -63,7 +76,6 @@ export const updateAbout = async (req, res) => {
         { folder: "portfolio/about" },
         async (error, result) => {
           if (error) {
-            console.error(error);
             return res.status(500).json({ error: "Image upload failed" });
           }
 
