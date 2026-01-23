@@ -1,0 +1,13 @@
+# ENV FILES
+.env
+.env.*
+
+# DEPENDENCIES
+node_modules/
+
+# BUILDS
+dist/
+build/
+
+# SYSTEM
+.DS_Store

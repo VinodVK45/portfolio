@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* Global page overflow */
+html,
+body {
+  overflow-x: hidden;  /* prevent page-wide horizontal scroll */
+  overflow-y: auto;
+}
+
+/* Hide scrollbar but keep scrolling for horizontal project rows */
+.scrollbar-none {
+  scrollbar-width: none;              /* Firefox / modern browsers */
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;                      /* Chrome / Edge / Safari */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+
+  /* Background Video */
+ 
