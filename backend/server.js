@@ -23,12 +23,18 @@ const startServer = async () => {
    // await createAdminIfNotExists(); // ✅ Admin created if missing
 
     // ================= MIDDLEWARES =================
+  const allowedOrigins = [
+  "http://localhost:5173",
+  "https://portfolio-i6598aglo-vinod-kumars-projects-9e99b201.vercel.app"
+    ];
+
     app.use(
-      cors({
-        origin: "http://localhost:5173",
-        credentials: true,
-      })
+        cors({
+              origin: allowedOrigins,
+              credentials: true,
+    })
     );
+
 
     app.use(express.json({ limit: "10mb" }));
     app.use(express.urlencoded({ extended: true, limit: "10mb" }));
