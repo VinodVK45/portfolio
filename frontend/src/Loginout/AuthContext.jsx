@@ -7,10 +7,17 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
-  // ✅ Persisted auth state
-  const [token, setToken] = useState(() =>
-    localStorage.getItem("adminToken")
-  );
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  /* ================= INIT AUTH (ON REFRESH) ================= */
+  useEffect(() => {
+    const storedToken = localStorage.getItem("adminToken");
+    if (storedToken) {
+      setToken(storedToken);
+    }
+    setLoading(false);
+  }, []);
 
   const isAuthenticated = !!token;
 
@@ -53,6 +60,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated,
+        loading,
       }}
     >
       {children}
@@ -60,4 +68,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
+  return context;
+};
