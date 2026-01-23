@@ -1,14 +1,10 @@
-// src/api/api.js
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL, // 🔥 IMPORTANT
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-/* ===============================
-   🔐 ATTACH TOKEN TO REQUEST
-================================ */
+/* ================= 🔐 ATTACH TOKEN ================= */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("adminToken");
@@ -32,20 +28,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/* ===============================
-   ⏳ HANDLE TOKEN EXPIRY
-================================ */
+/* ================= ⏳ TOKEN EXPIRY ================= */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const status = error?.response?.status;
-    const code = error?.response?.data?.code;
-
-    if (status === 401 && code === "TOKEN_EXPIRED") {
+    if (error?.response?.status === 401) {
       localStorage.removeItem("adminToken");
       window.location.replace("/login");
     }
-
     return Promise.reject(error);
   }
 );
