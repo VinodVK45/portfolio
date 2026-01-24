@@ -1,63 +1,58 @@
-import { useState } from "react";
-import api from "../api/api";
+import jwt from "jsonwebtoken";
+import sendEmail from "../utils/sendEmail.js";
 
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
 
-function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState("");
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg("");
-
-    try {
-      const res = await api.post("/auth/forgot-password", { email });
-      setMsg(res.data.message || "Reset link sent");
-    } catch (err) {
-      setMsg(
-        err.response?.data?.message || "Something went wrong"
-      );
-    } finally {
-      setLoading(false);
+    // 1️⃣ Validate email
+    if (!email) {
+      return res.status(400).json({
+        message: "Email is required",
+      });
     }
-  };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0b0f19] text-white">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-md p-8 rounded-2xl bg-black/40 border border-white/10"
-      >
-        <h1 className="text-2xl font-bold mb-6">
-          Forgot Password
-        </h1>
+    // 2️⃣ Allow only admin email
+    if (email !== process.env.ADMIN_EMAIL) {
+      return res.status(404).json({
+        message: "Admin email not found",
+      });
+    }
 
-        <input
-          type="email"
-          required
-          placeholder="Admin email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 p-3 rounded bg-black border border-white/20"
-        />
+    // 3️⃣ Create reset token
+    const resetToken = jwt.sign(
+      { email },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
 
-        {msg && (
-          <p className="text-sm text-yellow-300 mb-4">
-            {msg}
-          </p>
-        )}
+    // 4️⃣ Reset link
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-        <button
-          disabled={loading}
-          className="w-full py-3 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition"
-        >
-          {loading ? "Sending..." : "Send Reset Link"}
-        </button>
-      </form>
-    </div>
-  );
-}
+    // 5️⃣ Send email
+    const emailSent = await sendEmail({
+      to: email,
+      subject: "Reset Your Admin Password",
+      text: `Click the link below to reset your password:\n\n${resetLink}\n\nThis link expires in 15 minutes.`,
+    });
 
-export default ForgotPassword;
+    // 6️⃣ If email failed → STOP
+    if (!emailSent) {
+      return res.status(500).json({
+        message: "Failed to send reset email. Try again later.",
+      });
+    }
+
+    // 7️⃣ Success
+    res.json({
+      message: "Password reset link sent to your email",
+    });
+
+  } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
