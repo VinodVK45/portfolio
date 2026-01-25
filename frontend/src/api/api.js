@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  // 🔥 MUST POINT TO RENDER BACKEND (NOT VERCEL)
+  // ✅ MUST be EXACT Render service URL
   baseURL: "https://portfolio-backend.onrender.com/api",
   withCredentials: true,
 });
