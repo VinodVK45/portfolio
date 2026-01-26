@@ -21,7 +21,7 @@ export const loginAdmin = async (req, res) => {
     const token = jwt.sign(
       { id: admin._id },
       process.env.JWT_SECRET,
-      { expiresIn: "2h" } // ⏳ token expiry
+      { expiresIn: "2h" }
     );
 
     res.json({
@@ -32,6 +32,7 @@ export const loginAdmin = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ message: "Login failed" });
   }
 };
@@ -50,22 +51,18 @@ export const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
-    // Generate token
+    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    // Hash token
+    // Hash token for DB
     admin.resetPasswordToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    admin.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+    admin.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 min
 
     await admin.save({ validateBeforeSave: false });
-
-    if (!process.env.CLIENT_URL) {
-      throw new Error("CLIENT_URL is not defined in .env");
-    }
 
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
@@ -75,9 +72,10 @@ You requested a password reset.
 Click the link below to reset your password:
 ${resetURL}
 
-This link will expire in 15 minutes.
+This link expires in 15 minutes.
 `;
 
+    // 🔐 Safe: even if email fails, backend won't crash
     await sendEmail({
       to: admin.email,
       subject: "Admin Password Reset",
@@ -85,39 +83,44 @@ This link will expire in 15 minutes.
     });
 
     res.json({ message: "Reset link sent to email" });
-
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);
-
-    return res.status(500).json({
-      message: "Failed to send reset email",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Failed to send reset email" });
   }
 };
 
-
 /* ================= RESET PASSWORD ================= */
 export const resetPassword = async (req, res) => {
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
+  try {
+    const { password } = req.body;
 
-  const admin = await Admin.findOne({
-    resetPasswordToken: hashedToken,
-    resetPasswordExpire: { $gt: Date.now() },
-  });
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
 
-  if (!admin) {
-    return res.status(400).json({ message: "Token invalid or expired" });
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const admin = await Admin.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!admin) {
+      return res.status(400).json({ message: "Token invalid or expired" });
+    }
+
+    admin.password = password;
+    admin.resetPasswordToken = undefined;
+    admin.resetPasswordExpire = undefined;
+
+    await admin.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("RESET PASSWORD ERROR:", error);
+    res.status(500).json({ message: "Password reset failed" });
   }
-
-  admin.password = req.body.password;
-  admin.resetPasswordToken = undefined;
-  admin.resetPasswordExpire = undefined;
-
-  await admin.save();
-
-  res.json({ message: "Password reset successful" });
 };

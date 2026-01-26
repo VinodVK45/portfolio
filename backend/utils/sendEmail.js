@@ -1,16 +1,28 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend = null;
+
+// ✅ Initialize ONLY if API key exists
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+  console.warn("⚠️ RESEND_API_KEY not set. Emails are disabled.");
+}
 
 const sendEmail = async ({ to, subject, text }) => {
+  // ✅ Prevent crash if email disabled
+  if (!resend) {
+    console.warn("📭 Email skipped (Resend not configured)");
+    return false;
+  }
+
   try {
     await resend.emails.send({
-  from: "Vinod Admin <kattojuvk@gmail.com>",
-  to: [to],
-  subject,
-  text,
-});
-
+      from: "Portfolio <onboarding@resend.dev>",
+      to: [to],
+      subject,
+      text,
+    });
 
     return true;
   } catch (error) {
