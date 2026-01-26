@@ -6,15 +6,20 @@ const ProjectContext = createContext();
 
 /* ================= PROVIDER ================= */
 export const ProjectProvider = ({ children }) => {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState({
+    web: [],
+    uiux: [],
+    editing: [],
+  });
+
   const [loading, setLoading] = useState(true);
 
-  /* ================= GET ALL PROJECTS ================= */
+  /* ================= FETCH PROJECTS ================= */
   const fetchProjects = async () => {
     try {
       setLoading(true);
       const res = await api.get("/projects");
-      setProjects(res.data);
+      setProjects(res.data); // ✅ already grouped
     } catch (err) {
       console.error("Failed to fetch projects", err);
     } finally {
@@ -25,10 +30,17 @@ export const ProjectProvider = ({ children }) => {
   /* ================= CREATE PROJECT ================= */
   const createProject = async (formData) => {
     try {
-      const res = await api.post("/projects", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setProjects((prev) => [...prev, res.data]);
+      const res = await api.post("/projects", formData);
+      const newProject = res.data;
+
+      setProjects((prev) => ({
+        ...prev,
+        [newProject.category]: [
+          ...(prev[newProject.category] || []),
+          newProject,
+        ],
+      }));
+
       return true;
     } catch (err) {
       console.error("Create project failed", err);
@@ -39,13 +51,16 @@ export const ProjectProvider = ({ children }) => {
   /* ================= UPDATE PROJECT ================= */
   const updateProject = async (id, formData) => {
     try {
-      const res = await api.put(`/projects/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.put(`/projects/${id}`, formData);
+      const updated = res.data;
 
-      setProjects((prev) =>
-        prev.map((p) => (p._id === id ? res.data : p))
-      );
+      setProjects((prev) => ({
+        ...prev,
+        [updated.category]: prev[updated.category].map((p) =>
+          p._id === id ? updated : p
+        ),
+      }));
+
       return true;
     } catch (err) {
       console.error("Update project failed", err);
@@ -57,7 +72,15 @@ export const ProjectProvider = ({ children }) => {
   const deleteProject = async (id) => {
     try {
       await api.delete(`/projects/${id}`);
-      setProjects((prev) => prev.filter((p) => p._id !== id));
+
+      setProjects((prev) => {
+        const updated = {};
+        for (const key in prev) {
+          updated[key] = prev[key].filter((p) => p._id !== id);
+        }
+        return updated;
+      });
+
       return true;
     } catch (err) {
       console.error("Delete project failed", err);
