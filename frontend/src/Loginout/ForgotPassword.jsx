@@ -1,58 +1,43 @@
-import jwt from "jsonwebtoken";
-import sendEmail from "../utils/sendEmail.js";
+import { useState } from "react";
+import api from "../api/api";
 
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
+const ForgotPassword = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    // 1️⃣ Validate email
-    if (!email) {
-      return res.status(400).json({
-        message: "Email is required",
-      });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await api.post("/auth/forgot-password", { email });
+      alert(res.data.message);
+    } catch (err) {
+      alert(
+        err?.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // 2️⃣ Allow only admin email
-    if (email !== process.env.ADMIN_EMAIL) {
-      return res.status(404).json({
-        message: "Admin email not found",
-      });
-    }
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Forgot Password</h2>
 
-    // 3️⃣ Create reset token
-    const resetToken = jwt.sign(
-      { email },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+      <input
+        type="email"
+        placeholder="Enter admin email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
 
-    // 4️⃣ Reset link
-    const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-
-    // 5️⃣ Send email
-    const emailSent = await sendEmail({
-      to: email,
-      subject: "Reset Your Admin Password",
-      text: `Click the link below to reset your password:\n\n${resetLink}\n\nThis link expires in 15 minutes.`,
-    });
-
-    // 6️⃣ If email failed → STOP
-    if (!emailSent) {
-      return res.status(500).json({
-        message: "Failed to send reset email. Try again later.",
-      });
-    }
-
-    // 7️⃣ Success
-    res.json({
-      message: "Password reset link sent to your email",
-    });
-
-  } catch (error) {
-    console.error("FORGOT PASSWORD ERROR:", error);
-
-    res.status(500).json({
-      message: "Server error",
-    });
-  }
+      <button type="submit" disabled={loading}>
+        {loading ? "Sending..." : "Send Reset Link"}
+      </button>
+    </form>
+  );
 };
+
+export default ForgotPassword;
