@@ -19,26 +19,24 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ================= CORS (FINAL FIX) ================= */
+/* ================= CORS (FINAL, REAL FIX) ================= */
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://portfolio-9mwj7xvj-vinod-kumars-projects-9e99b201.vercel.app",
+  "https://portfolio-9men962nu-vinod-kumars-projects-9e99b201.vercel.app",
 ];
-
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow server-to-server, Postman, preflight
+    origin: function (origin, callback) {
+      // Allow server-to-server & tools like Postman
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        return callback(null, origin); // ✅ IMPORTANT
       }
 
-      // 🚨 DO NOT THROW ERROR (this caused 502)
-      return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
