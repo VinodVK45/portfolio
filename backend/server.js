@@ -13,53 +13,53 @@ dotenv.config();
 
 const app = express();
 
+// 🔥 TRUST PROXY (REQUIRED ON RENDER)
+app.set("trust proxy", 1);
+
+// ================= GLOBAL MIDDLEWARE =================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ================= CORS (FINAL & CORRECT) =================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://portfolio-git-main-vinod-kumars-projects-9e99b201.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow server-to-server & tools like Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+// 🔥 HANDLE PREFLIGHT REQUESTS
+app.options("*", cors());
+
+// ================= ROUTES =================
+app.use("/api/auth", authRoutes);
+app.use("/api/about", aboutRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/footer", footerRoutes);
+
+// ================= HEALTH CHECK =================
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
 // ================= START SERVER =================
-const startServer = async () => {
-  try {
-    await connectDB(); // ✅ Mongo connected
-
-    // ================= CORS (FINAL FIX) =================
-    app.use(
-      cors({
-        origin: true, // 🔥 allow all origins (Vercel, localhost, preview)
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: [
-          "Content-Type",
-          "Authorization",
-          "X-Requested-With",
-        ],
-      })
-    );
-
-    // 🔥 HANDLE PREFLIGHT (VERY IMPORTANT)
-    app.options("*", cors());
-
-    // ================= BODY PARSERS =================
-    app.use(express.json({ limit: "10mb" }));
-    app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-    // ================= ROUTES =================
-    app.use("/api/auth", authRoutes);
-    app.use("/api/about", aboutRoutes);
-    app.use("/api/projects", projectRoutes);
-    app.use("/api/footer", footerRoutes);
-
-    // ================= HEALTH CHECK =================
-    app.get("/", (req, res) => {
-      res.send("API is running...");
-    });
-
-    const PORT = process.env.PORT || 5000;
-
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-
-  } catch (error) {
-    console.error("❌ Server failed to start:", error.message);
-    process.exit(1);
-  }
-};
-
-startServer();
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
