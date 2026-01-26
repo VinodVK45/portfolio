@@ -73,20 +73,31 @@ export const updateAbout = async (req, res) => {
       }
 
       cloudinary.uploader.upload_stream(
-        { folder: "portfolio/about" },
-        async (error, result) => {
-          if (error) {
-            return res.status(500).json({ error: "Image upload failed" });
-          }
+  {
+    folder: "portfolio/about",
 
-          about.image = {
-            url: result.secure_url,
-            public_id: result.public_id,
-          };
+    // 🔥 OPTIMIZE LARGE IMAGES
+    resource_type: "image",
+    transformation: [
+      { quality: "auto" },        // auto compress
+      { fetch_format: "auto" },   // webp/avif when possible
+    ],
+  },
+  async (error, result) => {
+    if (error) {
+      console.error("CLOUDINARY ERROR:", error);
+      return res.status(500).json({ message: "Image upload failed" });
+    }
 
-          await saveData();
-        }
-      ).end(req.file.buffer);
+    about.image = {
+      url: result.secure_url,
+      public_id: result.public_id,
+    };
+
+    await saveData();
+  }
+).end(req.file.buffer);
+
     } else {
       await saveData();
     }
