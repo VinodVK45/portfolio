@@ -19,7 +19,7 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ================= CORS (FINAL, REAL FIX) ================= */
+/* ================= CORS (FINAL – 100% CORRECT) ================= */
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
@@ -28,15 +28,15 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow server-to-server & tools like Postman
+    origin: (origin, callback) => {
+      // allow server-to-server, Postman, cron jobs
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        return callback(null, origin); // ✅ IMPORTANT
+        return callback(null, true); // ✅ CORRECT
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error("CORS blocked"), false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
