@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  // ✅ MUST be EXACT Render service URL
-  baseURL: "https://portfolio-backend.onrender.com/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL, // ✅ from .env
   withCredentials: true,
 });
 
