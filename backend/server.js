@@ -21,11 +21,11 @@ app.use(express.urlencoded({ extended: true }));
 
 /* ================= CORS (FINAL FIX) ================= */
 const allowedOrigins = [
-  "http://localhost:3000",
   "http://localhost:5173",
-  "https://portfolio-899jnz1m-vinod-kumars-projects-9e99b201.vercel.app",
-  "https://portfolio-git-main-vinod-kumars-projects-9e99b201.vercel.app",
+  "http://localhost:3000",
+  "https://portfolio-9mwj7xvj-vinod-kumars-projects-9e99b201.vercel.app",
 ];
+
 
 app.use(
   cors({
