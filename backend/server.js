@@ -19,7 +19,7 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ================= CORS (FIXED FOR VERCEL) ================= */
+/* ================= CORS (FINAL FIX) ================= */
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
@@ -29,15 +29,16 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow Postman / curl / server-to-server
+    origin: (origin, callback) => {
+      // allow server-to-server, Postman, preflight
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("CORS not allowed"), false);
+      // 🚨 DO NOT THROW ERROR (this caused 502)
+      return callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -45,7 +46,7 @@ app.use(
   })
 );
 
-// IMPORTANT: preflight
+// ✅ MUST be here
 app.options("*", cors());
 
 /* ================= ROUTES ================= */
