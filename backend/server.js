@@ -13,14 +13,11 @@ dotenv.config();
 
 const app = express();
 
-// 🔥 TRUST PROXY (REQUIRED ON RENDER)
-app.set("trust proxy", 1);
-
-// ================= GLOBAL MIDDLEWARE =================
+/* ================= BASIC MIDDLEWARE ================= */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ================= CORS (FINAL & CORRECT) =================
+/* ================= CORS (FINAL, SAFE CONFIG) ================= */
 const allowedOrigins = [
   "http://localhost:5173",
   "https://portfolio-git-main-vinod-kumars-projects-9e99b201.vercel.app",
@@ -28,37 +25,37 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow server-to-server & tools like Postman
+    origin: (origin, callback) => {
+      // allow Postman, curl, server-to-server
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      return callback(new Error("CORS blocked"));
     },
-    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
-// 🔥 HANDLE PREFLIGHT REQUESTS
+/* 🔥 IMPORTANT: handle preflight */
 app.options("*", cors());
 
-// ================= ROUTES =================
+/* ================= ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/about", aboutRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/footer", footerRoutes);
 
-// ================= HEALTH CHECK =================
+/* ================= HEALTH ================= */
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.send("API running OK");
 });
 
-// ================= START SERVER =================
+/* ================= START ================= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
