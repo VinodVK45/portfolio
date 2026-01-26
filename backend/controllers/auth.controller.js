@@ -66,21 +66,27 @@ export const forgotPassword = async (req, res) => {
 
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    const message = `
-You requested a password reset.
-
-Click the link below to reset your password:
-${resetURL}
-
-This link expires in 15 minutes.
-`;
-
-    // 🔐 Safe: even if email fails, backend won't crash
-    await sendEmail({
+    const emailSent = await sendEmail({
       to: admin.email,
       subject: "Admin Password Reset",
-      text: message,
+      html: `
+        <h2>Password Reset</h2>
+        <p>You requested a password reset.</p>
+        <p>Click the button below:</p>
+        <a href="${resetURL}" 
+           style="display:inline-block;padding:10px 20px;
+           background:#000;color:#fff;text-decoration:none;">
+           Reset Password
+        </a>
+        <p>This link expires in 15 minutes.</p>
+      `,
     });
+
+    if (!emailSent) {
+      return res.status(500).json({
+        message: "Email service failed. Try again later.",
+      });
+    }
 
     res.json({ message: "Reset link sent to email" });
   } catch (error) {

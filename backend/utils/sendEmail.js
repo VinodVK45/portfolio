@@ -1,34 +1,28 @@
 import { Resend } from "resend";
 
-let resend = null;
-
-/* ================= INIT RESEND ================= */
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
-} else {
-  console.warn("⚠️ RESEND_API_KEY not set. Emails disabled.");
-}
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 /* ================= SEND EMAIL ================= */
 const sendEmail = async ({ to, subject, html }) => {
-  // ⛔ Prevent crash if API key missing
   if (!resend) {
-    console.warn("📭 Email skipped (Resend not configured)");
+    console.warn("⚠️ RESEND_API_KEY missing. Email not sent.");
     return false;
   }
 
   try {
-    await resend.emails.send({
-      from: "Portfolio <onboarding@resend.dev>", // ✅ REQUIRED
+    const response = await resend.emails.send({
+      from: "Portfolio <onboarding@resend.dev>", // sandbox sender
       to: [to],
       subject,
-      html, // ✅ USE HTML (IMPORTANT)
+      html, // ✅ MUST BE HTML
     });
 
-    console.log("📧 Email sent to:", to);
+    console.log("📧 Email sent successfully:", response);
     return true;
   } catch (error) {
-    console.error("❌ EMAIL ERROR:", error);
+    console.error("❌ EMAIL SEND FAILED:", error);
     return false;
   }
 };
