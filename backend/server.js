@@ -39,6 +39,24 @@ app.get("/", (req, res) => {
   res.send("🚀 API running OK");
 });
 
+// 🔥 MULTER / UPLOAD ERROR HANDLER (CRITICAL)
+app.use((err, req, res, next) => {
+  if (err?.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      message: "Image too large (max 20MB)",
+    });
+  }
+
+  if (err instanceof Error) {
+    return res.status(400).json({
+      message: err.message,
+    });
+  }
+
+  next();
+});
+
+
 /* ================= START SERVER ================= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
