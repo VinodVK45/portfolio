@@ -2,26 +2,30 @@ import Project from "../../models/Projects/Project.model.js";
 import cloudinary from "../../config/cloudinary.js";
 
 /* ===============================
-   CREATE PROJECT (Cloudinary / URL)
-   =============================== */
+   CREATE PROJECT (4K SAFE)
+================================ */
 export const createProject = async (req, res) => {
   try {
-    console.log("REQ FILE:", !!req.file);
-    console.log("REQ BODY:", req.body);
-
     let imageUrl = req.body.img;
 
-    // ✅ IMAGE FILE UPLOAD (SAFE)
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(
-        `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`,
-        {
-          folder: "projects",
-          resource_type: "image",
-        }
-      );
+    // ✅ IMAGE UPLOAD (STREAM – 4K SAFE)
+    if (req.file && req.file.buffer) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "projects",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
 
-      imageUrl = result.secure_url;
+        stream.end(req.file.buffer);
+      });
+
+      imageUrl = uploadResult.secure_url;
     }
 
     // ❌ NO IMAGE PROVIDED
@@ -43,12 +47,9 @@ export const createProject = async (req, res) => {
     return res.status(201).json(project);
   } catch (err) {
     console.error("CREATE PROJECT ERROR:", err);
-    return res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: "Failed to create project" });
   }
 };
-
-
-
 
 /* ===============================
    GET ALL PROJECTS (GROUPED)
@@ -76,10 +77,9 @@ export const getProjects = async (req, res) => {
   }
 };
 
-
 /* ===============================
    GET PROJECTS BY CATEGORY
-   =============================== */
+================================ */
 export const getProjectsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
@@ -91,8 +91,8 @@ export const getProjectsByCategory = async (req, res) => {
 };
 
 /* ===============================
-   UPDATE PROJECT
-   =============================== */
+   UPDATE PROJECT (4K SAFE)
+================================ */
 export const updateProject = async (req, res) => {
   try {
     const existing = await Project.findById(req.params.id);
@@ -106,35 +106,26 @@ export const updateProject = async (req, res) => {
       url: req.body.url ?? existing.url,
       category: req.body.category ?? existing.category,
       order: req.body.order ?? existing.order,
-      img: existing.img, // 🔥 KEEP OLD IMAGE
+      img: existing.img,
     };
 
-    // ✅ FILE UPLOAD HAS HIGHEST PRIORITY
-    if (req.file) {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "projects" },
-        async (error, result) => {
-          if (error) {
-            return res.status(500).json({ message: "Cloudinary error", error });
+    // ✅ IMAGE UPLOAD (STREAM – SAFE)
+    if (req.file && req.file.buffer) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "projects" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
           }
+        );
+        stream.end(req.file.buffer);
+      });
 
-          updateData.img = result.secure_url;
-
-          const updated = await Project.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true }
-          );
-
-          return res.status(200).json(updated);
-        }
-      );
-
-      uploadStream.end(req.file.buffer);
-      return;
+      updateData.img = uploadResult.secure_url;
     }
 
-    // ✅ URL UPDATE ONLY IF VALID
+    // ✅ URL UPDATE
     if (req.body.img && req.body.img.startsWith("http")) {
       updateData.img = req.body.img;
     }
@@ -147,16 +138,14 @@ export const updateProject = async (req, res) => {
 
     return res.status(200).json(updated);
   } catch (err) {
-    console.error("UPDATE ERROR:", err);
-    return res.status(400).json({ message: err.message });
+    console.error("UPDATE PROJECT ERROR:", err);
+    return res.status(500).json({ message: "Failed to update project" });
   }
 };
 
-
-
 /* ===============================
    DELETE PROJECT
-   =============================== */
+================================ */
 export const deleteProject = async (req, res) => {
   try {
     const project = await Project.findByIdAndDelete(req.params.id);
@@ -165,9 +154,9 @@ export const deleteProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    return res
-      .status(200)
-      .json({ message: "Project deleted successfully" });
+    return res.status(200).json({
+      message: "Project deleted successfully",
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

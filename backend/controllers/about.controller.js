@@ -6,7 +6,6 @@ export const getAbout = async (req, res) => {
   try {
     const about = await About.findOne();
 
-    // ✅ return safe default instead of creating
     if (!about) {
       return res.status(200).json({
         subtitle: "About Me",
@@ -27,8 +26,7 @@ export const getAbout = async (req, res) => {
   }
 };
 
-
-/* ================= UPDATE ABOUT ================= */
+/* ================= UPDATE ABOUT (4K SAFE) ================= */
 export const updateAbout = async (req, res) => {
   try {
     const {
@@ -44,22 +42,20 @@ export const updateAbout = async (req, res) => {
     let about = await About.findOne();
     if (!about) about = new About();
 
-    /* ---------- SERVICES PARSE ---------- */
+    /* ---------- SERVICES ---------- */
     let parsedServices = [];
-    if (Array.isArray(services)) {
-      parsedServices = services;
-    } else if (typeof services === "string") {
+    if (Array.isArray(services)) parsedServices = services;
+    else if (typeof services === "string") {
       try {
         parsedServices = JSON.parse(services);
       } catch {
         parsedServices = services
           .split(",")
-          .map(s => s.trim())
+          .map((s) => s.trim())
           .filter(Boolean);
       }
     }
 
-    /* ---------- UPDATE TEXT ---------- */
     about.subtitle = subtitle;
     about.paragraph1 = paragraph1;
     about.paragraph2 = paragraph2;
@@ -68,13 +64,8 @@ export const updateAbout = async (req, res) => {
     about.services = parsedServices;
     about.location = location;
 
-    /* ---------- IMAGE OPTIONAL ---------- */
-    if (req.file && req.file.buffer?.length) {
-      // remove old image
-      if (about.image?.public_id) {
-        await cloudinary.uploader.destroy(about.image.public_id);
-      }
-
+    /* ---------- IMAGE UPLOAD (STREAM) ---------- */
+    if (req.file && req.file.buffer) {
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
@@ -86,13 +77,18 @@ export const updateAbout = async (req, res) => {
             ],
           },
           (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
+            if (error) return reject(error);
+            resolve(result);
           }
         );
 
         stream.end(req.file.buffer);
       });
+
+      // delete old image AFTER success
+      if (about.image?.public_id) {
+        await cloudinary.uploader.destroy(about.image.public_id);
+      }
 
       about.image = {
         url: uploadResult.secure_url,
@@ -103,7 +99,6 @@ export const updateAbout = async (req, res) => {
     await about.save();
 
     res.json({ success: true, about });
-
   } catch (err) {
     console.error("UPDATE ABOUT ERROR:", err);
     res.status(500).json({
