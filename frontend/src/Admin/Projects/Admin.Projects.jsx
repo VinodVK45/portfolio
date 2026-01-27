@@ -2,26 +2,23 @@ import React, { useState } from "react";
 import { useProjects } from "../../context/ProjectContext";
 
 /* ===============================
-   ADMIN PROJECTS – FIXED VERSION
+   ADMIN PROJECTS – FIXED (IMAGE BUG)
    =============================== */
 
 function AdminProjects() {
-  /* ---------- CONTEXT ---------- */
   const {
     projects,
-    createProject,   // ✅ FIXED (was addProject)
+    createProject,
     updateProject,
     deleteProject,
   } = useProjects();
 
   const [imagePreview, setImagePreview] = useState(null);
 
-  /* ---------- UI STATE ---------- */
   const [activeCategory, setActiveCategory] = useState("web");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
 
-  /* ---------- FORM STATE ---------- */
   const [form, setForm] = useState({
     title: "",
     desc: "",
@@ -49,6 +46,7 @@ function AdminProjects() {
       order: 0,
       imageFile: null,
     });
+    setImagePreview(null);
     setIsModalOpen(true);
   };
 
@@ -57,12 +55,13 @@ function AdminProjects() {
     setForm({
       title: project.title,
       desc: project.desc,
-      img: project.img,
+      img: project.img || "",
       url: project.url,
       category: project.category,
       order: project.order || 0,
       imageFile: null,
     });
+    setImagePreview(project.img || null);
     setIsModalOpen(true);
   };
 
@@ -73,58 +72,55 @@ function AdminProjects() {
   };
 
   /* ===============================
-     SAVE PROJECT (FIXED)
+     SAVE PROJECT (🔥 REAL FIX HERE)
      =============================== */
   const handleSave = async (e) => {
     e.preventDefault();
 
-    try {
-      if (!form.title || !form.desc || !form.url) {
-        alert("Title, description and URL are required");
-        return;
-      }
-
-      if (!form.imageFile && !form.img && !editingProject) {
-        alert("Please upload an image or provide an image URL");
-        return;
-      }
-
-      if (form.img && !form.img.startsWith("http")) {
-        alert("Local file paths are not allowed.");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("desc", form.desc);
-      formData.append("url", form.url);
-      formData.append("category", form.category);
-      formData.append("order", form.order);
-
-      if (form.imageFile) {
-        formData.append("image", form.imageFile);
-      } else if (form.img.startsWith("http")) {
-        formData.append("img", form.img);
-      }
-
-      let success;
-
-      if (editingProject) {
-        success = await updateProject(editingProject._id, formData);
-      } else {
-        success = await createProject(formData); // ✅ FIXED
-      }
-
-      if (!success) {
-        alert("Failed to save project. Check console.");
-        return;
-      }
-
-      closeModal();
-    } catch (error) {
-      console.error("SAVE PROJECT ERROR:", error);
-      alert("Failed to save project. Check console.");
+    if (!form.title || !form.desc || !form.url) {
+      alert("Title, description and URL are required");
+      return;
     }
+
+    if (!form.imageFile && !form.img && !editingProject) {
+      alert("Image is required");
+      return;
+    }
+
+    if (form.img && !form.img.startsWith("http")) {
+      alert("Invalid image URL");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("title", form.title);
+    formData.append("desc", form.desc);
+    formData.append("url", form.url);
+    formData.append("category", form.category);
+    formData.append("order", String(form.order));
+
+    // ✅ CRITICAL FIX: ONLY ONE IMAGE SOURCE
+    if (form.imageFile) {
+      formData.append("image", form.imageFile);
+    } else if (form.img?.startsWith("http")) {
+      formData.append("img", form.img);
+    }
+
+    let success = false;
+
+    if (editingProject) {
+      success = await updateProject(editingProject._id, formData);
+    } else {
+      success = await createProject(formData);
+    }
+
+    if (!success) {
+      alert("Save failed ❌ (check console)");
+      return;
+    }
+
+    closeModal();
   };
 
   return (
@@ -181,11 +177,7 @@ function AdminProjects() {
             <div className="flex items-center gap-4">
               <div className="h-16 w-24 rounded-md bg-black/40 overflow-hidden">
                 <img
-                  src={
-                    project.img?.startsWith("http")
-                      ? project.img
-                      : "/placeholder.png"
-                  }
+                  src={project.img}
                   alt={project.title}
                   className="h-full w-full object-cover"
                 />
@@ -256,7 +248,6 @@ function AdminProjects() {
 
                   setImagePreview(URL.createObjectURL(file));
                 }}
-                className="w-full rounded-lg bg-black/40 p-2 text-sm"
               />
 
               <input
