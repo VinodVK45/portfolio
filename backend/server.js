@@ -15,19 +15,14 @@ const app = express();
 /* 🔥 CONNECT DB */
 connectDB();
 
-/* ================= BODY PARSERS ================= */
+/* ================= BODY PARSER ================= */
+// ✅ ONLY JSON — DO NOT USE urlencoded with multer
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-/* ================= ✅ FINAL CORS (JWT SAFE) ================= */
-/*
-  ✔ No cookies
-  ✔ JWT in Authorization header
-  ✔ Works with Vercel prod + preview URLs
-*/
+/* ================= ✅ CORS (JWT SAFE) ================= */
 app.use(
   cors({
-    origin: true, // 🔥 allow all origins dynamically
+    origin: true, // allow Vercel prod + preview + localhost
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
