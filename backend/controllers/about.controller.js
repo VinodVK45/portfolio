@@ -1,5 +1,5 @@
 import About from "../models/About/About.model.js";
-import cloudinary, { uploadToCloudinary } from "../config/cloudinary.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ================= GET ABOUT ================= */
 export const getAbout = async (req, res) => {
@@ -37,10 +37,11 @@ export const updateAbout = async (req, res) => {
         : JSON.parse(req.body.services);
     }
 
+    /* ---------- IMAGE UPLOAD ---------- */
     if (req.file && req.file.buffer) {
       let uploadResult;
       try {
-        uploadResult = await uploadToCloudinary(
+        uploadResult = await cloudinary.uploadToCloudinary(
           req.file.buffer,
           "portfolio/about"
         );

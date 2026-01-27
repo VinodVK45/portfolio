@@ -1,5 +1,5 @@
 import Project from "../../models/Projects/Project.model.js";
-import cloudinary, { uploadToCloudinary } from "../../config/cloudinary.js";
+import cloudinary from "../../config/cloudinary.js";
 
 /* ===============================
    CREATE PROJECT
@@ -10,7 +10,7 @@ export const createProject = async (req, res) => {
 
     if (req.file && req.file.buffer) {
       try {
-        const uploadResult = await uploadToCloudinary(
+        const uploadResult = await cloudinary.uploadToCloudinary(
           req.file.buffer,
           "projects"
         );
@@ -67,13 +67,15 @@ export const getProjects = async (req, res) => {
 export const updateProject = async (req, res) => {
   try {
     const existing = await Project.findById(req.params.id);
-    if (!existing) return res.status(404).json({ message: "Project not found" });
+    if (!existing) {
+      return res.status(404).json({ message: "Project not found" });
+    }
 
     let finalImage = existing.img;
 
     if (req.file && req.file.buffer) {
       try {
-        const uploadResult = await uploadToCloudinary(
+        const uploadResult = await cloudinary.uploadToCloudinary(
           req.file.buffer,
           "projects"
         );
