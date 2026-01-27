@@ -3,11 +3,11 @@ import Footer from "../models/Footer/Footer.model.js";
 /* ================= GET FOOTER ================= */
 export const getFooter = async (req, res) => {
   try {
-    let footer = await Footer.findOne();
+    const footer = await Footer.findOne();
 
-    // Create default footer if none exists
+    // ✅ safe fallback, NO DB write
     if (!footer) {
-      footer = await Footer.create({
+      return res.status(200).json({
         message: "",
         email: "",
         phone: "",
@@ -16,12 +16,13 @@ export const getFooter = async (req, res) => {
       });
     }
 
-    res.json(footer);
+    return res.json(footer);
   } catch (err) {
     console.error("GET FOOTER ERROR:", err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ message: "Failed to fetch Footer" });
   }
 };
+
 
 /* ================= UPDATE FOOTER ================= */
 export const updateFooter = async (req, res) => {

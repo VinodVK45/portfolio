@@ -4,10 +4,11 @@ import cloudinary from "../config/cloudinary.js";
 /* ================= GET ABOUT ================= */
 export const getAbout = async (req, res) => {
   try {
-    let about = await About.findOne();
+    const about = await About.findOne();
 
+    // ✅ return safe default instead of creating
     if (!about) {
-      about = await About.create({
+      return res.status(200).json({
         subtitle: "About Me",
         paragraph1: "",
         paragraph2: "",
@@ -19,12 +20,13 @@ export const getAbout = async (req, res) => {
       });
     }
 
-    res.json(about);
+    return res.json(about);
   } catch (err) {
     console.error("GET ABOUT ERROR:", err);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: "Failed to fetch About" });
   }
 };
+
 
 /* ================= UPDATE ABOUT ================= */
 export const updateAbout = async (req, res) => {

@@ -63,18 +63,19 @@ export const getProjects = async (req, res) => {
       editing: [],
     };
 
-    projects.forEach((project) => {
+    for (const project of projects) {
       if (grouped[project.category]) {
         grouped[project.category].push(project);
       }
-    });
+    }
 
     return res.status(200).json(grouped);
   } catch (error) {
     console.error("GET PROJECTS ERROR:", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: "Failed to fetch projects" });
   }
 };
+
 
 /* ===============================
    GET PROJECTS BY CATEGORY
