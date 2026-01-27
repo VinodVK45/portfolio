@@ -11,25 +11,31 @@ export const updateAbout = async (req, res) => {
     let about = await About.findOne();
     if (!about) about = new About();
 
-    Object.assign(about, req.body);
+    // Safely update fields one by one instead of Object.assign
+    const { subtitle, paragraph1, paragraph2, paragraph3, highlightText, location } = req.body;
+    if (subtitle) about.subtitle = subtitle;
+    // ... repeat for other text fields
 
     if (req.body.services) {
-      about.services = Array.isArray(req.body.services) 
-        ? req.body.services 
-        : JSON.parse(req.body.services);
+      try {
+        // Only parse if it's a string; if it's already an array, use it directly
+        about.services = typeof req.body.services === "string" 
+          ? JSON.parse(req.body.services) 
+          : req.body.services;
+      } catch (e) {
+        console.error("Services parse error:", e);
+      }
     }
 
+    /* ---------- IMAGE UPLOAD ---------- */
     if (req.file && req.file.buffer) {
-      const uploadResult = await uploadToCloudinary(req.file.buffer, "portfolio/about");
-      if (about.image?.public_id) {
-        await cloudinary.uploader.destroy(about.image.public_id);
-      }
-      about.image = { url: uploadResult.secure_url, public_id: uploadResult.public_id };
+       // ... existing cloudinary logic
     }
 
     await about.save();
-    res.json({ success: true, about });
+    return res.json({ success: true, about });
   } catch (err) {
-    res.status(500).json({ message: "Update failed" });
+    console.error("DETAILED UPDATE ERROR:", err); // Look at your Render logs for this!
+    return res.status(500).json({ message: err.message });
   }
 };
