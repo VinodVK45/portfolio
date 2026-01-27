@@ -64,28 +64,36 @@ export const updateAbout = async (req, res) => {
     about.services = parsedServices;
     about.location = location;
 
-    /* ---------- IMAGE UPLOAD (STREAM) ---------- */
+    /* ---------- IMAGE UPLOAD ---------- */
     if (req.file && req.file.buffer) {
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: "portfolio/about",
-            resource_type: "image",
-            transformation: [
-              { quality: "auto" },
-              { fetch_format: "auto" },
-            ],
-          },
-          (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-          }
-        );
+      let uploadResult;
 
-        stream.end(req.file.buffer);
-      });
+      try {
+        uploadResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "portfolio/about",
+              resource_type: "image",
+              transformation: [
+                { quality: "auto" },
+                { fetch_format: "auto" },
+              ],
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
 
-      // delete old image AFTER success
+          stream.end(req.file.buffer);
+        });
+      } catch (err) {
+        console.error("ABOUT IMAGE UPLOAD FAILED:", err);
+        return res.status(500).json({
+          message: "About image upload failed",
+        });
+      }
+
       if (about.image?.public_id) {
         await cloudinary.uploader.destroy(about.image.public_id);
       }
@@ -97,13 +105,11 @@ export const updateAbout = async (req, res) => {
     }
 
     await about.save();
-
-    res.json({ success: true, about });
+    return res.json({ success: true, about });
   } catch (err) {
     console.error("UPDATE ABOUT ERROR:", err);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to update About",
-      error: err.message,
     });
   }
 };
