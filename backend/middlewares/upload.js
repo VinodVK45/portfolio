@@ -1,36 +1,46 @@
 import multer from "multer";
 
 /*
-  ✅ 4K IMAGE SIZE EXPLANATION
-  ---------------------------
-  4K image (3840x2160):
-  - JPEG/WebP: 2–6 MB
-  - PNG: 6–15 MB
-  - RAW / HQ PNG: can reach 20–25 MB
-
-  👉 We allow up to 25 MB safely
+  ✅ MEMORY STORAGE (required for Cloudinary)
 */
-
 const storage = multer.memoryStorage();
 
+/*
+  ✅ 4K IMAGE SAFE LIMIT
+  Max ~30MB (covers PNG + high quality JPG)
+*/
 const upload = multer({
   storage,
 
   limits: {
-    fileSize: 25 * 1024 * 1024, // ✅ 25 MB (4K SAFE)
+    fileSize: 30 * 1024 * 1024, // 🔥 30 MB
   },
 
   fileFilter: (req, file, cb) => {
-    // ✅ Accept only images
+    // 🔒 Allow images only
     if (!file.mimetype.startsWith("image/")) {
       return cb(
         new Error("Only image files are allowed"),
         false
       );
     }
-
     cb(null, true);
   },
 });
 
-export default upload;
+/*
+  ✅ GLOBAL ERROR HANDLER FOR MULTER
+  (prevents silent crashes → 500)
+*/
+export default (req, res, next) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) {
+      console.error("MULTER ERROR:", err.message);
+
+      return res.status(400).json({
+        message: err.message || "Image upload failed",
+      });
+    }
+    next();
+  });
+};
