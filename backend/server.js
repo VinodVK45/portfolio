@@ -19,34 +19,19 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ================= ✅ FINAL CORS (FIXED) ================= */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://portfolio-git-main-vinod-kumars-projects-9e99b201.vercel.app",
-  "https://portfolio-iijnavdpwz-vinod-kumars-projects-9e99b201.vercel.app",
-];
-
-
+/* ================= ✅ FINAL CORS (JWT SAFE) ================= */
+/*
+  ✔ No cookies
+  ✔ JWT in Authorization header
+  ✔ Works with Vercel prod + preview URLs
+*/
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow Postman / server-to-server / same-origin
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS blocked"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: true, // 🔥 allow all origins dynamically
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// handle preflight
-app.options("*", cors());
 
 /* ================= ROUTES ================= */
 app.use("/api/auth", authRoutes);
