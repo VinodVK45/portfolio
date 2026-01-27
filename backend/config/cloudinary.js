@@ -3,20 +3,25 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/* ===============================
+   CLOUDINARY CONFIG
+================================ */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 🔥 ATTACH FUNCTION TO DEFAULT EXPORT
-cloudinary.uploadToCloudinary = (buffer, folder) => {
+/* ===============================
+   🔥 RENDER-SAFE UPLOAD FUNCTION
+================================ */
+const uploadToCloudinary = (buffer, folder) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
         resource_type: "image",
-        timeout: 120000,
+        timeout: 120000, // 🔥 REQUIRED FOR RENDER
       },
       (error, result) => {
         if (error) reject(error);
@@ -27,5 +32,8 @@ cloudinary.uploadToCloudinary = (buffer, folder) => {
     stream.end(buffer);
   });
 };
+
+/* 🔥 THIS IS THE LINE YOU WERE MISSING */
+cloudinary.uploadToCloudinary = uploadToCloudinary;
 
 export default cloudinary;
