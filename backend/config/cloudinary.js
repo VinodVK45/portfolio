@@ -14,7 +14,7 @@ export const uploadToCloudinary = (buffer, folder) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
-        resource_type: "auto", // Changed to auto for flexibility
+        resource_type: "auto",
         timeout: 120000,
       },
       (error, result) => {

@@ -1,23 +1,16 @@
 import Project from "../../models/Projects/Project.model.js";
-import cloudinary, { uploadToCloudinary } from "../../config/cloudinary.js";
+import { uploadToCloudinary } from "../../config/cloudinary.js";
 
 export const createProject = async (req, res) => {
   try {
-    let imageUrl = null;
+    let imageUrl = req.body.img;
     if (req.file && req.file.buffer) {
-      const uploadResult = await uploadToCloudinary(req.file.buffer, "projects");
-      imageUrl = uploadResult.secure_url;
-    } else if (req.body.img && req.body.img.startsWith("http")) {
-      imageUrl = req.body.img;
+      const result = await uploadToCloudinary(req.file.buffer, "projects");
+      imageUrl = result.secure_url;
     }
-
     if (!imageUrl) return res.status(400).json({ message: "Image required" });
 
-    const project = await Project.create({
-      ...req.body,
-      img: imageUrl,
-      order: Number(req.body.order) || 0
-    });
+    const project = await Project.create({ ...req.body, img: imageUrl });
     res.status(201).json(project);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -28,14 +21,13 @@ export const getProjects = async (req, res) => {
   try {
     const projects = await Project.find().sort({ order: 1 });
     const grouped = { web: [], uiux: [], editing: [] };
-    projects.forEach((p) => grouped[p.category]?.push(p));
+    projects.forEach(p => grouped[p.category]?.push(p));
     res.json(grouped);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch projects" });
+    res.status(500).json({ message: err.message });
   }
 };
 
-// ADDED THIS TO FIX THE IMPORT ERROR IN ROUTES
 export const getProjectsByCategory = async (req, res) => {
   try {
     const projects = await Project.find({ category: req.params.category });
@@ -50,18 +42,16 @@ export const updateProject = async (req, res) => {
     const existing = await Project.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: "Not found" });
 
-    let finalImage = existing.img;
+    let finalImage = req.body.img || existing.img;
     if (req.file && req.file.buffer) {
-      const uploadResult = await uploadToCloudinary(req.file.buffer, "projects");
-      finalImage = uploadResult.secure_url;
-    } else if (req.body.img?.startsWith("http")) {
-      finalImage = req.body.img;
+      const result = await uploadToCloudinary(req.file.buffer, "projects");
+      finalImage = result.secure_url;
     }
 
     const updated = await Project.findByIdAndUpdate(
       req.params.id,
       { ...req.body, img: finalImage },
-      { new: true }
+      { new: true, runValidators: true }
     );
     res.json(updated);
   } catch (err) {
