@@ -40,9 +40,10 @@ export const getProjectsByCategory = async (req, res) => {
 export const updateProject = async (req, res) => {
   try {
     const existing = await Project.findById(req.params.id);
-    if (!existing) return res.status(404).json({ message: "Not found" });
+    if (!existing) return res.status(404).json({ message: "Project not found" });
 
     let finalImage = req.body.img || existing.img;
+
     if (req.file && req.file.buffer) {
       const result = await uploadToCloudinary(req.file.buffer, "projects");
       finalImage = result.secure_url;
@@ -55,6 +56,7 @@ export const updateProject = async (req, res) => {
     );
     res.json(updated);
   } catch (err) {
+    console.error("PROJECT UPDATE ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };

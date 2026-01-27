@@ -21,11 +21,18 @@ export const updateAbout = async (req, res) => {
   try {
     let about = await About.findOne() || new About();
 
-    const textFields = ["subtitle", "paragraph1", "paragraph2", "paragraph3", "highlightText", "location"];
-    textFields.forEach(f => { if (req.body[f] !== undefined) about[f] = req.body[f]; });
+    // Explicitly map fields to prevent undefined errors
+    const fields = ["subtitle", "paragraph1", "paragraph2", "paragraph3", "highlightText", "location"];
+    fields.forEach(f => { if (req.body[f] !== undefined) about[f] = req.body[f]; });
 
-    if (req.body.services) about.services = safeParse(req.body.services);
+    // Handle services (frontend might send string or array)
+    if (req.body.services) {
+      about.services = typeof req.body.services === "string" 
+        ? JSON.parse(req.body.services) 
+        : req.body.services;
+    }
 
+    // Image Upload Logic
     if (req.file && req.file.buffer) {
       const result = await uploadToCloudinary(req.file.buffer, "portfolio/about");
       about.image = { url: result.secure_url, public_id: result.public_id };
@@ -34,6 +41,7 @@ export const updateAbout = async (req, res) => {
     await about.save();
     res.json({ success: true, about });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("UPDATE ABOUT ERROR:", err);
+    res.status(500).json({ message: "Server error during update" });
   }
 };
