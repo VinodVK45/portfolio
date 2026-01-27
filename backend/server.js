@@ -19,24 +19,25 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* ================= CORS (FINAL – 100% CORRECT) ================= */
+/* ================= ✅ FINAL CORS (FIXED) ================= */
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:3000",
-  "https://portfolio-9men962nu-vinod-kumars-projects-9e99b201.vercel.app",
+  "https://portfolio-git-main-vinod-kumars-projects-9e99b201.vercel.app",
+  "https://portfolio-iijnavdpwz-vinod-kumars-projects-9e99b201.vercel.app",
 ];
+
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow server-to-server, Postman, cron jobs
+      // allow Postman / server-to-server / same-origin
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        return callback(null, true); // ✅ CORRECT
+        callback(null, true);
+      } else {
+        callback(new Error("CORS blocked"));
       }
-
-      return callback(new Error("CORS blocked"), false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -44,7 +45,7 @@ app.use(
   })
 );
 
-// ✅ MUST be here
+// handle preflight
 app.options("*", cors());
 
 /* ================= ROUTES ================= */
@@ -55,7 +56,7 @@ app.use("/api/footer", footerRoutes);
 
 /* ================= HEALTH CHECK ================= */
 app.get("/", (req, res) => {
-  res.send("API running OK");
+  res.send("🚀 API running OK");
 });
 
 /* ================= START SERVER ================= */
