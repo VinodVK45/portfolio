@@ -3,14 +3,19 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/* ===============================
+   CLOUDINARY CONFIG
+================================ */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
 });
 
-/* 🔥 RENDER-SAFE UPLOAD WRAPPER */
+/* ===============================
+   🔥 SAFE UPLOAD FUNCTION (RENDER)
+   NO NEW FILES
+================================ */
 export const uploadToCloudinary = (buffer, folder) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -24,6 +29,7 @@ export const uploadToCloudinary = (buffer, folder) => {
         else resolve(result);
       }
     );
+
     stream.end(buffer);
   });
 };
