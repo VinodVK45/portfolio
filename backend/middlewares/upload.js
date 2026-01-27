@@ -1,32 +1,24 @@
 import multer from "multer";
 
-/* ===============================
-   MEMORY STORAGE (Cloudinary)
-================================ */
+/*
+  4K image sizes (safe):
+  - JPEG: ~8–12MB
+  - PNG: ~20–30MB
+*/
 const storage = multer.memoryStorage();
 
-/* ===============================
-   4K IMAGE SAFE LIMIT
-   JPG: 5–8MB
-   PNG: 10–25MB
-================================ */
 const upload = multer({
   storage,
   limits: {
-    fileSize: 30 * 1024 * 1024, // ✅ 30 MB
+    fileSize: 30 * 1024 * 1024, // ✅ 30MB (4K SAFE)
   },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
-      return cb(
-        new Error("Only image files are allowed"),
-        false
-      );
+      cb(new Error("Only image files allowed"), false);
+      return;
     }
     cb(null, true);
   },
 });
 
-/* ===============================
-   EXPORT MULTER INSTANCE
-================================ */
 export default upload;
