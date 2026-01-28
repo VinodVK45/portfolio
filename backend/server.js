@@ -22,6 +22,17 @@ app.use(express.urlencoded({ extended: true }));
 /* ================= CORS ================= */
 app.use(cors({ origin: true }));
 
+/* ================= HEALTH CHECK (ADD HERE) ================= */
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    db: "connected",
+    cloudinary: process.env.CLOUDINARY_CLOUD_NAME,
+    time: new Date(),
+  });
+});
+
+
 /* ================= ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/about", aboutRoutes);
