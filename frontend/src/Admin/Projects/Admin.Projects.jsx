@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useProjects } from "../../context/ProjectContext";
+import toast from "react-hot-toast";
+
 
 /* ===============================
    ADMIN PROJECTS – FIXED (IMAGE BUG)
@@ -78,17 +80,17 @@ function AdminProjects() {
     e.preventDefault();
 
     if (!form.title || !form.desc || !form.url) {
-      alert("Title, description and URL are required");
+      toast.error("Title, description and URL are required");
       return;
     }
 
     if (!form.imageFile && !form.img && !editingProject) {
-      alert("Image is required");
+      toast.error("Image is required");
       return;
     }
 
     if (form.img && !form.img.startsWith("http")) {
-      alert("Invalid image URL");
+      toast.error("Invalid image URL");
       return;
     }
 
@@ -116,9 +118,10 @@ function AdminProjects() {
     }
 
     if (!success) {
-      alert("Save failed ❌ (check console)");
+      toast.error("Save failed. Please try again.");
       return;
     }
+     toast.success(editingProject ? "Project updated" : "Project created");
 
     closeModal();
   };

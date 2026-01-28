@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../api/api";
+import toast from "react-hot-toast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -11,11 +12,9 @@ const ForgotPassword = () => {
 
     try {
       const res = await api.post("/auth/forgot-password", { email });
-      alert(res.data.message);
+        toast.success("Password reset link sent to your email");
     } catch (err) {
-      alert(
-        err?.response?.data?.message || "Something went wrong"
-      );
+      toast.error("Failed to send password reset link");
     } finally {
       setLoading(false);
     }

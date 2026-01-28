@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api  from "../api/api";
+import toast from "react-hot-toast";
+
 
 function ResetPassword() {
   const { token } = useParams();
@@ -20,7 +22,7 @@ function ResetPassword() {
         password,
       });
 
-      setMsg("Password reset successful!");
+      toast.success("Password reset successful. You can now log in.");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setMsg(

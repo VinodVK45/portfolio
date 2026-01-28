@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAbout } from "../../context/AboutContext";
+import toast from "react-hot-toast";
+
 
 function AboutAdmin() {
   const { about, updateAbout } = useAbout();
@@ -54,11 +56,11 @@ function AboutAdmin() {
     const success = await updateAbout(fd);
 
     if (success) {
-      alert("About section updated successfully ✅");
-    } else {
-      alert("Update failed ❌");
-    }
-  };
+       toast.success("About section updated successfully");
+         } else {
+          toast.error("Failed to update About section");
+        }
+    };
 
   return (
     <div className="p-10 text-white">

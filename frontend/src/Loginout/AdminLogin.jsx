@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./AuthContext";
 import api from "../api/api";
+import toast from "react-hot-toast";
 
 function AdminLogin() {
   const { login } = useAuth();
@@ -13,9 +14,9 @@ function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password); // ✅ navigation happens here
+      await login(email, password); // navigation happens here
     } catch {
-      alert("Login failed");
+      toast.error("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -23,15 +24,15 @@ function AdminLogin() {
 
   const forgotPassword = async () => {
     if (!email) {
-      alert("Please enter your email first");
+      toast.error("Please enter your email first");
       return;
     }
 
     try {
       await api.post("/auth/forgot-password", { email });
-      alert("Password reset link sent to your email");
+      toast.success("Password reset link sent to your email");
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong");
+      toast.error(err.response?.data?.message || "Something went wrong");
     }
   };
 
