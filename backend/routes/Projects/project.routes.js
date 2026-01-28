@@ -1,6 +1,5 @@
 import express from "express";
 import upload from "../../middlewares/upload.js";
-
 import {
   createProject,
   getProjects,
@@ -11,17 +10,17 @@ import {
 
 const router = express.Router();
 
-// CREATE (WITH IMAGE)
-router.post("/", upload.single("image"), createProject);
+const safeUpload = (req, res, next) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) return res.status(400).json({ message: err.message });
+    next();
+  });
+};
 
-// READ
+router.post("/", safeUpload, createProject);
 router.get("/", getProjects);
 router.get("/category/:category", getProjectsByCategory);
-
-// UPDATE (WITH IMAGE)
-router.put("/:id", upload.single("image"), updateProject);
-
-// DELETE
+router.put("/:id", safeUpload, updateProject);
 router.delete("/:id", deleteProject);
 
 export default router;
